@@ -1,75 +1,62 @@
-# Maple Hexa Matrix Tracker (6th Job)
+# Maple HEXA Matrix Tracker (6th Job)
 
-Ứng dụng web theo dõi tiến độ **Hexa Matrix (Job 6)** cho MapleStory, xây dựng bằng **React + TypeScript + Vite + Tailwind CSS**, tối ưu hóa để lưu trữ tĩnh hoàn toàn miễn phí trên **GitHub Pages**.
+Ứng dụng web theo dõi tiến độ **HEXA Matrix (6th Job)** cho MapleStory (giao diện Sheet Style), xây dựng bằng **React + TypeScript + Vite + Tailwind CSS**, đồng bộ phi tập trung qua **Nostr Relays** và tối ưu để host tĩnh miễn phí trên **GitHub Pages**.
 
 ---
 
-## 🌟 Tính Năng Nổi Bật
+## 🌟 Tính Năng Chính
 
 1. **Local-first 100%:**
-   - Dữ liệu lưu tức thì vào `localStorage`. Sử dụng mượt mà không cần mạng, không cần tạo tài khoản.
-2. **Đồng Bộ Đa Thiết Bị Không Cần Server Riêng (Cross-device Sync):**
-   - **Mã Đồng Bộ (Sync Code):** Sinh mã ngắn (vd: `HEXA-8821` + PIN 4 số). Thiết bị khác chỉ cần nhập mã là kéo dữ liệu về, hai máy **không cần online cùng lúc**.
-   - **Google Login:** Đăng nhập 1-click qua tài khoản Google để sync tự động.
-   - **File Backup (.JSON):** Xuất/nhập file dự phòng thủ công mọi lúc.
-3. **Theo Dõi Tài Nguyên & Tính Toán Tự Động:**
-   - Theo dõi **Sol Erda** (0 - 20) và **Sol Erda Energy** (0 - 1000).
-   - Theo dõi **Mảnh Sol Erda (Fragments)**.
-   - Bảng chi phí chuẩn cho từng loại Core: **Origin Skill**, **Mastery Core (I, II)**, **Enhancement Core (I - IV)**, **Common Core (Sol Janus)**.
-   - Tính toán chính xác lượng Sol Erda & Mảnh cần để đạt cấp độ mục tiêu (Target Level).
-   - Dự báo **số ngày hoàn thành (ETA)** dựa trên nhiệm vụ hằng ngày và tốc độ farm.
-4. **Nhiệm Vụ Hằng Ngày & Hằng Tuần (Income Tracker):**
-   - Check-in **Daily Erda Quest** (tự cộng 600 Energy + 12 Fragments vào kho).
-   - Check-in **High Mountain Weekly** (tự cộng 2 Sol Erda + 20 Fragments vào kho).
-5. **Hexa Stat Core:**
-   - Theo dõi 2 Core Hexa Stat (Main Stat + 2 Sub Stats) tối đa 20 level.
-6. **Hỗ Trợ Nhiều Nhân Vật:**
-   - Quản lý đồng thời Main và các Sub-main / Boss mule.
+   - Dữ liệu lưu tự động vào `localStorage`. Sử dụng mượt mà không cần đăng nhập hay tạo tài khoản.
+
+2. **Đồng Bộ Đa Thiết Bị Qua Nostr Relays (Không Cần Server Riêng / Không Cần Firebase):**
+   - **Mã đồng bộ 1 chuỗi (`HEXA-XXXX-XXXX-XXXX`):** Vừa dùng làm định danh Nostr (`NIP-78`, `kind: 30078`) vừa dùng làm khóa mã hóa **AES-GCM** toàn bộ dữ liệu ngay trên trình duyệt trước khi gửi lên Relay.
+   - **Auto-sync thông minh (Debounce 60s):** Khi có thay đổi, nút Sync trên Header hiển thị đếm ngược `60s` để tránh spam Relay; bấm trực tiếp vào nút để **đồng bộ ngay lập tức**.
+   - **Lắng nghe Realtime giữa nhiều thiết bị:** Tự động cập nhật khi thiết bị khác đẩy bản mới (tự tạm dừng kết nối khi tab ẩn để tiết kiệm pin/mạng). Nếu máy hiện tại đang có thay đổi chưa sync, app sẽ hiện thanh thông báo cho phép chọn **Tải bản mới** hoặc **Giữ bản hiện tại**.
+   - **Tùy chỉnh Nostr Relays:** Cấu hình sẵn 4 public relays (`wss://relay.damus.io`, `wss://nos.lol`, `wss://relay.nostr.band`, `wss://nostr.mom`) và hỗ trợ chỉnh sửa/khôi phục mặc định ngay trong modal đồng bộ.
+   - **File Backup (`.JSON`):** Xuất/nhập file dự phòng thủ công mọi lúc.
+
+3. **Theo Dõi HEXA Matrix & Thứ Tự Nâng Cấp (Upgrade Order):**
+   - Chia rõ 4 nhóm Node: **Skill Nodes** (Origin, Sovereign Everlasting, Void Origin), **Enhancement Nodes** (5th Job Boosts), **Mastery Nodes** (ghép chéo 2 skill với icon split), và **Common Nodes** (Sol Janus, Sol Hecate, kỹ năng chung theo branch như HEXA Demonic Wrath cho branch `demon`).
+   - **Tính chi phí còn thiếu:** Tự động tính tổng **Sol Erda** và **Mảnh Sol Erda (Fragments)** còn lại để đạt Lv. 30.
+   - **Thứ Tự Nâng Cấp Kỹ Năng (167 Bước):** Hỗ trợ xem dạng **Lưới Icon** và **Danh Sách**, tự động đánh dấu viền vàng (`★ Cần Nâng Tiếp`) bước kế tiếp cần nâng.
+   - **Toggle `Ignore Skill 3`:** Cho phép bỏ qua kỹ năng thứ 3 trong bảng **Skill Nodes** (ví dụ: Void Origin) khỏi thứ tự ưu tiên và tổng chi phí còn thiếu.
+
+4. **HEXA Stat Nodes (I, II, III):**
+   - Theo dõi 3 **HEXA Stat Nodes** với bộ 3 dòng stat cố định theo class (với **Lethe**: `M.ATT`, `INT`, `Crit Damage` xoay vòng theo `A, B, C` / `B, A, C` / `C, A, B`).
+   - Mỗi dòng nâng độc lập tối đa **Lv. 10**, tổng 3 dòng đạt **20 / 20** được tính là hoàn thành và mở khóa tuần tự **I → II → III**.
+
+5. **Quản Lý Nhiều Nhân Vật & Chọn Class:**
+   - Hỗ trợ thêm mới, đổi tên, chuyển đổi và xóa nhân vật trực tiếp trên Header.
+   - Chọn class bằng **Search + Dropdown custom** (lọc theo tên class hoặc branch).
+
+---
+
+## 📁 Cấu Trúc Thư Mục Icon
+
+```text
+public/icons/
+├── common/                 # Icon dùng chung cho mọi class (HEXA Stat I/II/III, Sol Janus, Sol Hecate)
+├── branches/
+│   └── demon/              # Icon dùng chung theo branch (HEXA Demonic Wrath)
+└── lethe/                  # Icon riêng của từng class
+```
 
 ---
 
 ## 🚀 Hướng Dẫn Deploy Lên GitHub Pages
 
-Dự án đã tích hợp sẵn GitHub Actions workflow tự động build và deploy:
+Dự án đã tích hợp sẵn GitHub Actions workflow (`.github/workflows/deploy.yml`) tự động build và deploy:
 
 1. Đẩy mã nguồn lên repository GitHub của bạn:
    ```bash
-   git add .
-   git commit -m "feat: complete maple hexa tracker with sync"
    git push origin main
    ```
-2. Trên GitHub, vào tab **Settings** của repository:
-   - Vào mục **Pages** (ở cột bên trái).
-   - Dưới phần **Build and deployment** -> **Source**: Chọn **GitHub Actions**.
-3. Mỗi khi bạn `git push origin main`, GitHub sẽ tự động build và xuất bản trang web của bạn tại địa chỉ:
-   ```
+2. Trên GitHub, vào **Settings** -> **Pages** -> **Build and deployment** -> **Source**: chọn **GitHub Actions**.
+3. Mỗi khi push lên `main`, GitHub Actions sẽ tự động build và xuất bản trang web tại:
+   ```text
    https://<username>.github.io/<repo-name>/
    ```
-
----
-
-## ☁️ Cấu Hình Firebase Miễn Phí (Để Bật Tính Năng Đồng Bộ Đám Mây)
-
-Bạn không cần bỏ ra bất kỳ chi phí nào (gói Spark của Firebase là **miễn phí vĩnh viễn**):
-
-1. Truy cập [Firebase Console](https://console.firebase.google.com) và bấm **Add project** (Đặt tên tùy ý, ví dụ `my-maple-tracker`).
-2. Vào mục **Build** ở menu bên trái:
-   - **Firestore Database**: Bấm *Create database*, chọn vị trí gần bạn (vd `asia-southeast1`), chọn *Start in test mode* (hoặc đặt rules cho phép đọc/ghi).
-   - **Authentication**: Bấm *Get started*, trong tab *Sign-in method* kích hoạt **Google** (nếu muốn dùng đăng nhập Google).
-3. Vào **Project Settings (biểu tượng bánh răng)** -> cuộn xuống mục **Your apps** -> Chọn icon **Web (</>)** để tạo web app.
-4. Copy toàn bộ đoạn `firebaseConfig`:
-   ```json
-   {
-     "apiKey": "AIzaSy...",
-     "authDomain": "my-project.firebaseapp.com",
-     "projectId": "my-project",
-     "storageBucket": "my-project.appspot.com",
-     "messagingSenderId": "123456789",
-     "appId": "1:123456789:web:abcdef"
-   }
-   ```
-5. Mở ứng dụng web Maple Hexa Tracker của bạn -> Bấm nút **Cài đặt / Đồng bộ** (góc trên bên phải) -> Chọn tab **Firebase Setup** -> Dán đoạn JSON trên vào và bấm **Lưu Cấu Hình Vào Trình Duyệt**.
-   *(Hoặc tạo file `.env` với các biến `VITE_FIREBASE_*` nếu muốn nhúng sẵn khi build).*
 
 ---
 
@@ -82,6 +69,6 @@ npm install
 # Chạy server phát triển (HMR)
 npm run dev
 
-# Kiểm tra TypeScript và Build bản phát hành
+# Kiểm tra TypeScript và build bản phát hành
 npm run build
 ```
