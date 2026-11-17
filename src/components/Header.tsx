@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react'
 import { Character, SyncState } from '../types/hexa'
-import { CLASS_PRESETS } from '../data/classesData'
+import { CLASS_LIST, CLASS_META_MAP } from '../data/classesRegistry'
 import { ClassSelectDropdown } from './ClassSelectDropdown'
 
 interface HeaderProps {
@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSyncModal,
   onManualSync
 }) => {
-  const availableClasses = Object.values(CLASS_PRESETS)
+  const availableClasses = CLASS_LIST
   const [isCharMenuOpen, setIsCharMenuOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [newCharName, setNewCharName] = useState('')
@@ -187,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <Users className="w-4 h-4 text-purple-400 shrink-0" />
                 <span className="truncate max-w-[110px] sm:max-w-[160px]">{activeCharacter.name}</span>
                 <span className="text-[10px] font-normal text-slate-400 hidden sm:inline">
-                  ({CLASS_PRESETS[activeCharacter.classId || 'lethe']?.name || activeCharacter.job || 'Lethe'})
+                  ({CLASS_META_MAP[activeCharacter.classId || 'lethe']?.name || activeCharacter.job || 'Lethe'})
                 </span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${

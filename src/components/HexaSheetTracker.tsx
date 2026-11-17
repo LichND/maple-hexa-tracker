@@ -15,19 +15,21 @@ import {
   Lock
 } from 'lucide-react'
 import { Character, HexaSkillNode, HexaStatNode } from '../types/hexa'
-import { CLASS_PRESETS, LETHE_CLASS, PriorityStep } from '../data/classesData'
+import { ClassPreset, PriorityStep } from '../data/commonSkills'
 import { calculateCostBetweenLevels } from '../data/hexaCosts'
 import { createDefaultHexaStats } from '../services/storage'
 import { MultiSkillIcon } from './MultiSkillIcon'
 
 interface HexaSheetTrackerProps {
   character: Character
+  preset: ClassPreset
   onUpdateCharacter: (updater: (prev: Character) => Character) => void
   onChangeClass?: (classId: string) => void
 }
 
 export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
   character,
+  preset,
   onUpdateCharacter
 }) => {
   const [priorityViewMode, setPriorityViewMode] = useState<'grid' | 'list'>('grid')
@@ -39,8 +41,6 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
     id: string
     rect: DOMRect
   } | null>(null)
-
-  const preset = CLASS_PRESETS[character.classId || 'lethe'] || LETHE_CLASS
 
   const currentPriority =
     preset.priorities.find((p) => p.id === character.selectedPriorityId) ||
@@ -58,7 +58,7 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
   // Ensure all 3 HEXA Stat nodes exist with class-specific A/B/C ordering:
   // Stat I: A, B, C | Stat II: B, A, C | Stat III: C, A, B
   const hexaStats: HexaStatNode[] = useMemo(() => {
-    const defaults = createDefaultHexaStats(character.classId || 'lethe')
+    const defaults = createDefaultHexaStats(preset.hexaStatTypes)
     const existing = character.hexaStats || []
     return defaults.map((def, idx) => {
       const found = existing.find((s) => s.id === def.id) || existing[idx]
@@ -72,13 +72,13 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         subStat2Level: s2
       }
     })
-  }, [character.hexaStats, character.classId])
+  }, [character.hexaStats, preset.hexaStatTypes])
 
   type StatLineKey = 'mainStatLevel' | 'subStat1Level' | 'subStat2Level'
 
   const setHexaStatLineLevel = (statIndex: number, lineKey: StatLineKey, level: number) => {
     onUpdateCharacter((prev) => {
-      const defaults = createDefaultHexaStats(prev.classId || 'lethe')
+      const defaults = createDefaultHexaStats(preset.hexaStatTypes)
       const existing = prev.hexaStats || []
       const nextStats = defaults.map((def, idx) => {
         const found = existing.find((s) => s.id === def.id) || existing[idx]

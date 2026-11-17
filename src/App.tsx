@@ -3,8 +3,14 @@ import { Header } from './components/Header'
 import { HexaSheetTracker } from './components/HexaSheetTracker'
 import { SyncModal } from './components/SyncModal'
 import { ClassSelectDropdown } from './components/ClassSelectDropdown'
-import { loadAppState, saveAppState, createCharacterFromPreset } from './services/storage'
-import { CLASS_PRESETS } from './data/classesData'
+import {
+  loadAppState,
+  saveAppState,
+  createCharacterFromPreset,
+  hydrateCharacterWithPreset
+} from './services/storage'
+import { CLASS_LIST, getLoadedClassPreset, loadClassPreset } from './data/classesRegistry'
+import { ClassPreset } from './data/commonSkills'
 import { AppState, Character } from './types/hexa'
 import {
   uploadBySyncCode,
@@ -29,7 +35,7 @@ export function App() {
   const hasPendingChangesRef = useRef(false)
 
   // First time creation state if no characters
-  const availableClasses = Object.values(CLASS_PRESETS)
+  const availableClasses = CLASS_LIST
   const [initialName, setInitialName] = useState('')
   const [initialClassId, setInitialClassId] = useState<string>(availableClasses[0]?.id || 'lethe')
 
@@ -37,6 +43,38 @@ export function App() {
     appState.characters.find((c) => c.id === appState.activeCharacterId) ||
     appState.characters[0] ||
     null
+
+  const [activePreset, setActivePreset] = useState<ClassPreset | null>(() =>
+    activeCharacter ? getLoadedClassPreset(activeCharacter.classId || 'lethe') || null : null
+  )
+
+  useEffect(() => {
+    if (!activeCharacter) {
+      setActivePreset(null)
+      return
+    }
+    const classId = activeCharacter.classId || 'lethe'
+    const cached = getLoadedClassPreset(classId)
+    if (cached) {
+      setActivePreset(cached)
+    } else {
+      setActivePreset(null)
+    }
+    let cancelled = false
+    loadClassPreset(classId).then((preset) => {
+      if (cancelled) return
+      setActivePreset(preset)
+      setAppState((prev) => ({
+        ...prev,
+        characters: prev.characters.map((c) =>
+          c.id === activeCharacter.id ? hydrateCharacterWithPreset(c, preset) : c
+        )
+      }))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [activeCharacter?.id, activeCharacter?.classId])
 
   // Save to localStorage whenever state changes
   useEffect(() => {
@@ -278,9 +316,11 @@ export function App() {
   }
 
   // Create initial character
-  const handleCreateInitialChar = () => {
+  const handleCreateInitialChar = async () => {
     if (!initialName.trim()) return
-    const char = createCharacterFromPreset(initialName.trim(), initialClassId)
+    const preset = await loadClassPreset(initialClassId)
+    const char = createCharacterFromPreset(initialName.trim(), preset)
+    setActivePreset(preset)
     updateAppStateWithAutoSync((prev) => ({
       ...prev,
       characters: [char],
@@ -313,9 +353,11 @@ export function App() {
     })
   }
 
-  const handleAddCharacter = (name: string, classId = 'lethe') => {
+  const handleAddCharacter = async (name: string, classId = 'lethe') => {
     if (!name.trim()) return
-    const newChar = createCharacterFromPreset(name.trim(), classId)
+    const preset = await loadClassPreset(classId)
+    const newChar = createCharacterFromPreset(name.trim(), preset)
+    setActivePreset(preset)
     updateAppStateWithAutoSync((prev) => ({
       ...prev,
       characters: [...prev.characters, newChar],
@@ -422,10 +464,16 @@ export function App() {
               </button>
             </div>
           </div>
+        ) : !activePreset ? (
+          <div className="flex items-center justify-center py-24 text-slate-400 text-sm gap-2">
+            <RefreshCw className="w-4 h-4 animate-spin text-purple-400" />
+            <span>Đang tải dữ liệu class...</span>
+          </div>
         ) : (
           /* SHEET STYLE TRACKER */
           <HexaSheetTracker
             character={activeCharacter}
+            preset={activePreset}
             onUpdateCharacter={updateActiveCharacter}
           />
         )}

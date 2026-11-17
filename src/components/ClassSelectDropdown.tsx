@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search, Check } from 'lucide-react'
-import { ClassPreset } from '../data/classesData'
+import { ClassMeta } from '../data/commonSkills'
 
 interface ClassSelectDropdownProps {
-  classes: ClassPreset[]
+  classes: ClassMeta[]
   value: string
   onChange: (classId: string) => void
   compact?: boolean

@@ -1,5 +1,5 @@
 import { AppState, Character, HexaSkillNode, HexaStatNode, DailyTracker } from '../types/hexa'
-import { CLASS_PRESETS, COMMON_ICONS, LETHE_CLASS } from '../data/classesData'
+import { COMMON_ICONS, ClassPreset } from '../data/commonSkills'
 
 const STORAGE_KEY = 'maple_hexa_tracker_state_v4'
 
@@ -16,9 +16,10 @@ export function createDefaultDailyTracker(): DailyTracker {
   }
 }
 
-export function createDefaultHexaStats(classId = 'lethe'): HexaStatNode[] {
-  const preset = CLASS_PRESETS[classId] || LETHE_CLASS
-  const [statA, statB, statC] = preset.hexaStatTypes || ['M.ATT', 'INT', 'Crit Damage']
+export function createDefaultHexaStats(
+  hexaStatTypes: [string, string, string] = ['M.ATT', 'INT', 'Crit Damage']
+): HexaStatNode[] {
+  const [statA, statB, statC] = hexaStatTypes
 
   return [
     {
@@ -57,8 +58,7 @@ export function createDefaultHexaStats(classId = 'lethe'): HexaStatNode[] {
   ]
 }
 
-export function createCharacterFromPreset(name: string, classId = 'lethe'): Character {
-  const preset = CLASS_PRESETS[classId] || LETHE_CLASS
+export function createCharacterFromPreset(name: string, preset: ClassPreset): Character {
   const nodes: HexaSkillNode[] = [
     ...preset.nodes.skills.map((n, idx) => ({
       ...n,
@@ -83,9 +83,76 @@ export function createCharacterFromPreset(name: string, classId = 'lethe'): Char
     currentSolErdaEnergy: 0,
     currentFragments: 0,
     nodes,
-    hexaStats: createDefaultHexaStats(),
+    hexaStats: createDefaultHexaStats(preset.hexaStatTypes),
     daily: createDefaultDailyTracker(),
     updatedAt: Date.now()
+  }
+}
+
+export function hydrateCharacterWithPreset(char: Character, preset: ClassPreset): Character {
+  const defaultNodes = [
+    ...preset.nodes.skills,
+    ...preset.nodes.mastery,
+    ...preset.nodes.enhancement,
+    ...preset.nodes.common
+  ]
+
+  const levelMapByName = new Map(char.nodes.map((n) => [n.name, n.currentLevel]))
+  const levelMapById = new Map(char.nodes.map((n) => [n.id, n.currentLevel]))
+
+  const updatedNodes: HexaSkillNode[] = defaultNodes.map((n) => {
+    let currentLvl = levelMapByName.get(n.name) ?? levelMapById.get(n.id)
+    if (currentLvl === undefined) {
+      if (n.name.includes('Majeure')) {
+        currentLvl = levelMapByName.get('HEXA Majeure')
+      } else if (n.name.includes('Demonic')) {
+        currentLvl = levelMapByName.get('HEXA Demonic Wrath') ?? levelMapByName.get('HEXA Demonic Wroth')
+      } else if (n.name.includes('Janus')) {
+        currentLvl = levelMapByName.get('Sol Janus')
+      } else if (n.name.includes('Void Origin')) {
+        currentLvl = levelMapByName.get('Void Origin')
+      }
+    }
+    const isFirstOriginSkill = preset.nodes.skills[0]?.id === n.id
+    return {
+      ...n,
+      currentLevel: currentLvl ?? (isFirstOriginSkill ? 1 : 0),
+      targetLevel: 30
+    }
+  })
+
+  const defaultStats = createDefaultHexaStats(preset.hexaStatTypes)
+  const existingStats = Array.isArray(char.hexaStats) ? char.hexaStats : []
+  const updatedStats: HexaStatNode[] = defaultStats.map((defStat, idx) => {
+    const found = existingStats.find((s) => s.id === defStat.id) || existingStats[idx]
+    const m = found ? Math.max(0, Math.min(10, found.mainStatLevel || 0)) : 0
+    const s1 = found ? Math.max(0, Math.min(10, 20 - m, found.subStat1Level || 0)) : 0
+    const s2 = found ? Math.max(0, Math.min(10, 20 - m - s1, found.subStat2Level || 0)) : 0
+    return {
+      ...defStat,
+      mainStatLevel: m,
+      subStat1Level: s1,
+      subStat2Level: s2
+    }
+  })
+
+  const getTotalStatLvl = (s: HexaStatNode) =>
+    s.mainStatLevel + s.subStat1Level + s.subStat2Level
+
+  if (getTotalStatLvl(updatedStats[0]) < 20) {
+    updatedStats[1] = { ...updatedStats[1], mainStatLevel: 0, subStat1Level: 0, subStat2Level: 0 }
+    updatedStats[2] = { ...updatedStats[2], mainStatLevel: 0, subStat1Level: 0, subStat2Level: 0 }
+  } else if (getTotalStatLvl(updatedStats[1]) < 20) {
+    updatedStats[2] = { ...updatedStats[2], mainStatLevel: 0, subStat1Level: 0, subStat2Level: 0 }
+  }
+
+  return {
+    ...char,
+    classId: preset.id,
+    job: preset.name,
+    ignoreVoidOrigin: char.ignoreVoidOrigin ?? false,
+    nodes: updatedNodes,
+    hexaStats: updatedStats
   }
 }
 
@@ -114,77 +181,11 @@ export function loadAppState(): AppState {
       return getDefaultAppState()
     }
 
-    // Refresh nodes with latest preset data and preserve levels
-    parsed.characters = parsed.characters.map((char) => {
-      const charClassId = char.classId || 'lethe'
-      const preset = CLASS_PRESETS[charClassId] || LETHE_CLASS
-      const defaultNodes = [
-        ...preset.nodes.skills,
-        ...preset.nodes.mastery,
-        ...preset.nodes.enhancement,
-        ...preset.nodes.common
-      ]
-
-      const levelMapByName = new Map(char.nodes.map((n) => [n.name, n.currentLevel]))
-      const levelMapById = new Map(char.nodes.map((n) => [n.id, n.currentLevel]))
-
-      const updatedNodes: HexaSkillNode[] = defaultNodes.map((n) => {
-        let currentLvl = levelMapByName.get(n.name) ?? levelMapById.get(n.id)
-        if (currentLvl === undefined) {
-          if (n.name.includes('Majeure')) {
-            currentLvl = levelMapByName.get('HEXA Majeure')
-          } else if (n.name.includes('Demonic')) {
-            currentLvl = levelMapByName.get('HEXA Demonic Wrath') ?? levelMapByName.get('HEXA Demonic Wroth')
-          } else if (n.name.includes('Janus')) {
-            currentLvl = levelMapByName.get('Sol Janus')
-          } else if (n.name.includes('Void Origin')) {
-            currentLvl = levelMapByName.get('Void Origin')
-          }
-        }
-        const isFirstOriginSkill = preset.nodes.skills[0]?.id === n.id
-        return {
-          ...n,
-          currentLevel: currentLvl ?? (isFirstOriginSkill ? 1 : 0),
-          targetLevel: 30
-        }
-      })
-
-      const defaultStats = createDefaultHexaStats(preset.id)
-      const existingStats = Array.isArray(char.hexaStats) ? char.hexaStats : []
-      const updatedStats: HexaStatNode[] = defaultStats.map((defStat, idx) => {
-        const found =
-          existingStats.find((s) => s.id === defStat.id) || existingStats[idx]
-        const m = found ? Math.max(0, Math.min(10, found.mainStatLevel || 0)) : 0
-        const s1 = found ? Math.max(0, Math.min(10, 20 - m, found.subStat1Level || 0)) : 0
-        const s2 = found ? Math.max(0, Math.min(10, 20 - m - s1, found.subStat2Level || 0)) : 0
-        return {
-          ...defStat,
-          mainStatLevel: m,
-          subStat1Level: s1,
-          subStat2Level: s2
-        }
-      })
-
-      const getTotalStatLvl = (s: HexaStatNode) =>
-        s.mainStatLevel + s.subStat1Level + s.subStat2Level
-
-      // Enforce sequential unlock: Stat II requires Stat I total == 20, Stat III requires Stat II total == 20
-      if (getTotalStatLvl(updatedStats[0]) < 20) {
-        updatedStats[1] = { ...updatedStats[1], mainStatLevel: 0, subStat1Level: 0, subStat2Level: 0 }
-        updatedStats[2] = { ...updatedStats[2], mainStatLevel: 0, subStat1Level: 0, subStat2Level: 0 }
-      } else if (getTotalStatLvl(updatedStats[1]) < 20) {
-        updatedStats[2] = { ...updatedStats[2], mainStatLevel: 0, subStat1Level: 0, subStat2Level: 0 }
-      }
-
-      return {
-        ...char,
-        classId: preset.id,
-        job: preset.name,
-        ignoreVoidOrigin: char.ignoreVoidOrigin ?? false,
-        nodes: updatedNodes,
-        hexaStats: updatedStats
-      }
-    })
+    parsed.characters = parsed.characters.map((char) => ({
+      ...char,
+      classId: char.classId || 'lethe',
+      ignoreVoidOrigin: char.ignoreVoidOrigin ?? false
+    }))
 
     return parsed
   } catch (e) {
