@@ -373,18 +373,15 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         )}
 
         {/* Floating tooltip portaled to document.body */}
-        {isNext && showNodeTip && activeNodeTooltip && currentTipStep && typeof document !== 'undefined' &&
-          createPortal(
+        {isNext && showNodeTip && activeNodeTooltip && currentTipStep && typeof document !== 'undefined' && (() => {
+          const targetCenterX = activeNodeTooltip.rect.left + activeNodeTooltip.rect.width / 2
+          const tooltipLeft = Math.max(12, Math.min(window.innerWidth - 332, targetCenterX - 140))
+          const arrowLeft = Math.max(14, Math.min(280, targetCenterX - tooltipLeft - 6))
+          return createPortal(
             <div
               style={{
                 position: 'fixed',
-                left: Math.max(
-                  12,
-                  Math.min(
-                    window.innerWidth - 260,
-                    activeNodeTooltip.rect.left + activeNodeTooltip.rect.width / 2 - 120
-                  )
-                ),
+                left: tooltipLeft,
                 bottom: window.innerHeight - activeNodeTooltip.rect.top + 10,
                 zIndex: 9999
               }}
@@ -405,10 +402,14 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                 </div>
               </div>
               {/* Arrow pointer */}
-              <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-r border-b border-amber-400 rotate-45" />
+              <div
+                style={{ left: arrowLeft }}
+                className="absolute -bottom-1.5 w-3 h-3 bg-slate-900 border-r border-b border-amber-400 rotate-45"
+              />
             </div>,
             document.body
-          )}
+          )
+        })()}
 
         {/* Left: MultiSkillIcon & Name */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -517,11 +518,11 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                 HEXA Matrix Tracker
               </h1>
               <span className="text-[11px] font-bold bg-purple-950 text-purple-300 border border-purple-700 px-2 py-0.5 rounded-full">
-                Lethe
+                {preset.name}
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              Ruler of Covenants • 6th Job MapleStory
+              {preset.branch.toUpperCase()} • 6th Job MapleStory
             </p>
           </div>
         </div>
@@ -777,18 +778,15 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                   )}
 
                   {/* Floating tooltip portaled to document.body */}
-                  {isNext && showStatTip && activeNodeTooltip && currentTipStep && typeof document !== 'undefined' &&
-                    createPortal(
+                  {isNext && showStatTip && activeNodeTooltip && currentTipStep && typeof document !== 'undefined' && (() => {
+                    const targetCenterX = activeNodeTooltip.rect.left + activeNodeTooltip.rect.width / 2
+                    const tooltipLeft = Math.max(12, Math.min(window.innerWidth - 332, targetCenterX - 140))
+                    const arrowLeft = Math.max(14, Math.min(280, targetCenterX - tooltipLeft - 6))
+                    return createPortal(
                       <div
                         style={{
                           position: 'fixed',
-                          left: Math.max(
-                            12,
-                            Math.min(
-                              window.innerWidth - 260,
-                              activeNodeTooltip.rect.left + activeNodeTooltip.rect.width / 2 - 120
-                            )
-                          ),
+                          left: tooltipLeft,
                           bottom: window.innerHeight - activeNodeTooltip.rect.top + 10,
                           zIndex: 9999
                         }}
@@ -808,10 +806,14 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                             </span>
                           </div>
                         </div>
-                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-r border-b border-amber-400 rotate-45" />
+                        <div
+                          style={{ left: arrowLeft }}
+                          className="absolute -bottom-1.5 w-3 h-3 bg-slate-900 border-r border-b border-amber-400 rotate-45"
+                        />
                       </div>,
                       document.body
-                    )}
+                    )
+                  })()}
 
                   {/* Card Header: Icon, Node Name & Total Progress */}
                   <div className="flex items-center justify-between gap-2.5 pb-2.5 border-b border-slate-700/60">
@@ -968,7 +970,7 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-400" />
             <h2 className="font-black text-slate-100 text-base">
-              Thứ Tự Nâng Cấp Kỹ Năng Lethe ({currentPriority.steps.length} Bước)
+              Thứ Tự Nâng Cấp Kỹ Năng {preset.name} ({currentPriority.steps.length} Bước)
             </h2>
           </div>
 
@@ -998,42 +1000,36 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
           </div>
         </div>
 
-        {/* Priority Grid Mode (Built with REAL skill icons & target level badge at bottom-right) */}
+        {/* Priority Grid Mode (Wrap-flow with fixed spacing & left-to-right arrows) */}
         {priorityViewMode === 'grid' ? (
-          <div className="p-4 sm:p-5 overflow-x-auto">
-            <div className="min-w-[840px]">
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(16, minmax(0, 1fr))',
-                  gap: '8px'
-                }}
-              >
-                {currentPriority.steps.map((step, idx) => {
-                  const isCompleted = completedStepsMap[idx]
-                  const isIgnored = Boolean(ignoredStepsMap[idx])
-                  const isNext = idx === currentTipIndex
-                  const isTooltipOpen = activeStepTooltip?.idx === idx
-                  const frameClass = CATEGORY_THEMES[getStepCategory(step)]
+          <div className="p-4 sm:p-5">
+            <div className="flex flex-wrap items-center gap-y-2.5">
+              {currentPriority.steps.map((step, idx) => {
+                const isCompleted = completedStepsMap[idx]
+                const isIgnored = Boolean(ignoredStepsMap[idx])
+                const isNext = idx === currentTipIndex
+                const isTooltipOpen = activeStepTooltip?.idx === idx
+                const frameClass = CATEGORY_THEMES[getStepCategory(step)]
+                const hasNext = idx < currentPriority.steps.length - 1
 
-                  const handleOpenStepTip = (
-                    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-                  ) => {
-                    setActiveStepTooltip({
-                      idx,
-                      rect: e.currentTarget.getBoundingClientRect()
-                    })
-                  }
+                const handleOpenStepTip = (
+                  e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+                ) => {
+                  setActiveStepTooltip({
+                    idx,
+                    rect: e.currentTarget.getBoundingClientRect()
+                  })
+                }
 
-                  return (
+                return (
+                  <div key={idx} className="inline-flex items-center shrink-0">
                     <div
-                      key={idx}
                       onMouseEnter={handleOpenStepTip}
                       onMouseLeave={() => setActiveStepTooltip(null)}
                       onTouchStart={handleOpenStepTip}
                       onTouchEnd={() => setActiveStepTooltip(null)}
                       onTouchCancel={() => setActiveStepTooltip(null)}
-                      className={`relative mx-auto w-fit flex items-center justify-center p-[2.5px] rounded-[10px] transition-transform cursor-pointer select-none z-10 hover:scale-105 hover:z-20 ${frameClass}`}
+                      className={`relative w-fit flex items-center justify-center p-[2.5px] rounded-[10px] transition-transform cursor-pointer select-none z-10 hover:scale-105 hover:z-20 ${frameClass}`}
                     >
                       {/* Icon with target level in bottom right corner */}
                       <div
@@ -1072,18 +1068,15 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                       </div>
 
                       {/* Floating tooltip portaled to document.body */}
-                      {isTooltipOpen && activeStepTooltip && typeof document !== 'undefined' &&
-                        createPortal(
+                      {isTooltipOpen && activeStepTooltip && typeof document !== 'undefined' && (() => {
+                        const targetCenterX = activeStepTooltip.rect.left + activeStepTooltip.rect.width / 2
+                        const tooltipLeft = Math.max(12, Math.min(window.innerWidth - 332, targetCenterX - 120))
+                        const arrowLeft = Math.max(12, Math.min(280, targetCenterX - tooltipLeft - 6))
+                        return createPortal(
                           <div
                             style={{
                               position: 'fixed',
-                              left: Math.max(
-                                12,
-                                Math.min(
-                                  window.innerWidth - 230,
-                                  activeStepTooltip.rect.left + activeStepTooltip.rect.width / 2 - 105
-                                )
-                              ),
+                              left: tooltipLeft,
                               bottom: window.innerHeight - activeStepTooltip.rect.top + 8,
                               zIndex: 9999
                             }}
@@ -1120,15 +1113,26 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                                   : 'Chưa đến lượt'}
                               </span>
                             </div>
-                            {/* Arrow pointer */}
-                            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-r border-b border-amber-400 rotate-45" />
+                            {/* Arrow pointer aligned to hovered icon center */}
+                            <div
+                              style={{ left: arrowLeft }}
+                              className="absolute -bottom-1.5 w-3 h-3 bg-slate-900 border-r border-b border-amber-400 rotate-45"
+                            />
                           </div>,
                           document.body
-                        )}
+                        )
+                      })()}
                     </div>
-                  )
-                })}
-              </div>
+
+                    {/* Fixed-width arrow connector between skills */}
+                    {hasNext && (
+                      <div className="w-4 flex items-center justify-center shrink-0 text-slate-500">
+                        <ArrowRight className="w-3 h-3" />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         ) : (

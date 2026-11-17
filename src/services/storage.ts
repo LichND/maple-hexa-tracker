@@ -60,7 +60,11 @@ export function createDefaultHexaStats(classId = 'lethe'): HexaStatNode[] {
 export function createCharacterFromPreset(name: string, classId = 'lethe'): Character {
   const preset = CLASS_PRESETS[classId] || LETHE_CLASS
   const nodes: HexaSkillNode[] = [
-    ...preset.nodes.skills.map((n) => ({ ...n, currentLevel: 0, targetLevel: 30 })),
+    ...preset.nodes.skills.map((n, idx) => ({
+      ...n,
+      currentLevel: idx === 0 ? 1 : 0,
+      targetLevel: 30
+    })),
     ...preset.nodes.mastery.map((n) => ({ ...n, currentLevel: 0, targetLevel: 30 })),
     ...preset.nodes.enhancement.map((n) => ({ ...n, currentLevel: 0, targetLevel: 30 })),
     ...preset.nodes.common.map((n) => ({ ...n, currentLevel: 0, targetLevel: 30 }))
@@ -111,14 +115,16 @@ export function loadAppState(): AppState {
     }
 
     // Refresh nodes with latest preset data and preserve levels
-    const defaultNodes = [
-      ...LETHE_CLASS.nodes.skills,
-      ...LETHE_CLASS.nodes.mastery,
-      ...LETHE_CLASS.nodes.enhancement,
-      ...LETHE_CLASS.nodes.common
-    ]
-
     parsed.characters = parsed.characters.map((char) => {
+      const charClassId = char.classId || 'lethe'
+      const preset = CLASS_PRESETS[charClassId] || LETHE_CLASS
+      const defaultNodes = [
+        ...preset.nodes.skills,
+        ...preset.nodes.mastery,
+        ...preset.nodes.enhancement,
+        ...preset.nodes.common
+      ]
+
       const levelMapByName = new Map(char.nodes.map((n) => [n.name, n.currentLevel]))
       const levelMapById = new Map(char.nodes.map((n) => [n.id, n.currentLevel]))
 
@@ -135,14 +141,15 @@ export function loadAppState(): AppState {
             currentLvl = levelMapByName.get('Void Origin')
           }
         }
+        const isFirstOriginSkill = preset.nodes.skills[0]?.id === n.id
         return {
           ...n,
-          currentLevel: currentLvl || 0,
+          currentLevel: currentLvl ?? (isFirstOriginSkill ? 1 : 0),
           targetLevel: 30
         }
       })
 
-      const defaultStats = createDefaultHexaStats(char.classId || 'lethe')
+      const defaultStats = createDefaultHexaStats(preset.id)
       const existingStats = Array.isArray(char.hexaStats) ? char.hexaStats : []
       const updatedStats: HexaStatNode[] = defaultStats.map((defStat, idx) => {
         const found =
@@ -171,8 +178,8 @@ export function loadAppState(): AppState {
 
       return {
         ...char,
-        classId: 'lethe',
-        job: 'Lethe',
+        classId: preset.id,
+        job: preset.name,
         ignoreVoidOrigin: char.ignoreVoidOrigin ?? false,
         nodes: updatedNodes,
         hexaStats: updatedStats
