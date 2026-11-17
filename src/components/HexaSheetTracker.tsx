@@ -185,6 +185,35 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
     )
   }
 
+  type StepCategory = 'origin' | 'mastery' | 'boost' | 'common' | 'stat'
+
+  const CATEGORY_THEMES: Record<StepCategory, string> = {
+    origin: 'bg-orange-500/30 border border-orange-400/65',
+    mastery: 'bg-violet-500/30 border border-violet-400/65',
+    boost: 'bg-sky-500/30 border border-sky-400/65',
+    common: 'bg-emerald-500/30 border border-emerald-400/65',
+    stat: 'bg-zinc-900 border border-zinc-600/75'
+  }
+
+  const getStepCategory = (step: PriorityStep): StepCategory => {
+    const cleanStep = step.skillName.toLowerCase()
+    if (cleanStep.includes('stat')) return 'stat'
+
+    const matched = character.nodes.find((n) => {
+      const cleanNode = n.name.toLowerCase()
+      if (cleanStep.includes('majeure') && cleanNode.includes('majeure')) return true
+      if (cleanStep.includes('demonic') && cleanNode.includes('demonic')) return true
+      return (
+        cleanNode.includes(cleanStep) ||
+        cleanStep.includes(cleanNode) ||
+        (step.shortName && cleanNode.includes(step.shortName.toLowerCase())) ||
+        (n.subSkills && n.subSkills.some((s) => cleanStep.includes(s.name.toLowerCase())))
+      )
+    })
+
+    return matched ? matched.type : 'common'
+  }
+
   // Calculate Priority Status & Current Active Step
   const { currentTipStep, currentTipIndex, completedStepsMap, ignoredStepsMap } = useMemo(() => {
     const completedMap: Record<number, boolean> = {}
@@ -549,8 +578,8 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         {/* Left: Skill Nodes & Enhancement Nodes */}
         <div className="space-y-5">
           {/* Skill Nodes */}
-          <div className="bg-[#181d2a] border border-[#3b4463] rounded-2xl relative shadow-lg">
-            <div className="bg-gradient-to-r from-purple-800 to-indigo-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between gap-2 rounded-t-2xl">
+          <div className="bg-[#181d2a] border border-orange-900/60 rounded-2xl relative shadow-lg">
+            <div className="bg-gradient-to-r from-orange-700 to-amber-700 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between gap-2 rounded-t-2xl">
               <span>Skill Nodes</span>
               <div className="flex items-center gap-2.5">
                 {thirdSkillNode && (
@@ -560,19 +589,19 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[11px] font-semibold transition ${
                       ignoreSkill3
                         ? 'bg-rose-950/90 border-rose-500/80 text-rose-200'
-                        : 'bg-purple-950/70 border-purple-500/50 text-purple-200 hover:border-purple-300 hover:text-white'
+                        : 'bg-orange-950/60 border-orange-400/50 text-orange-100 hover:border-orange-200 hover:text-white'
                     }`}
                     title={`Bật/tắt bỏ qua Skill 3 (${thirdSkillNode.name}) khi nâng theo order`}
                   >
                     {ignoreSkill3 ? (
                       <EyeOff className="w-3 h-3 text-rose-300" />
                     ) : (
-                      <Eye className="w-3 h-3 text-purple-300" />
+                      <Eye className="w-3 h-3 text-orange-200" />
                     )}
                     <span>Ignore Skill 3</span>
                   </button>
                 )}
-                <span className="text-xs font-normal text-purple-200">
+                <span className="text-xs font-normal text-orange-100">
                   {skillNodes.filter((n) => n.currentLevel >= 30).length} / {skillNodes.length} Max
                 </span>
               </div>
@@ -583,10 +612,10 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
           </div>
 
           {/* Enhancement Nodes (5th Job Boosts) */}
-          <div className="bg-[#181d2a] border border-[#3b4463] rounded-2xl relative shadow-lg">
-            <div className="bg-gradient-to-r from-teal-700 to-cyan-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
+          <div className="bg-[#181d2a] border border-sky-900/60 rounded-2xl relative shadow-lg">
+            <div className="bg-gradient-to-r from-sky-700 to-blue-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
               <span>Enhancement Nodes (5th Job Boosts)</span>
-              <span className="text-xs font-normal text-teal-200">
+              <span className="text-xs font-normal text-sky-100">
                 {enhancementNodes.filter((n) => n.currentLevel >= 30).length} / {enhancementNodes.length} Max
               </span>
             </div>
@@ -599,7 +628,7 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         {/* Right: Mastery Nodes & Common Nodes */}
         <div className="space-y-5">
           {/* Mastery Nodes */}
-          <div className="bg-[#181d2a] border border-[#3b4463] rounded-2xl relative shadow-lg">
+          <div className="bg-[#181d2a] border border-violet-900/60 rounded-2xl relative shadow-lg">
             <div className="bg-gradient-to-r from-violet-700 to-purple-700 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-2">
                 <span>Mastery Nodes</span>
@@ -616,11 +645,11 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
             </div>
           </div>
 
-            {/* Common Nodes */}
-          <div className="bg-[#181d2a] border border-[#3b4463] rounded-2xl relative shadow-lg">
-            <div className="bg-gradient-to-r from-sky-700 to-blue-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
+          {/* Common Nodes */}
+          <div className="bg-[#181d2a] border border-emerald-900/60 rounded-2xl relative shadow-lg">
+            <div className="bg-gradient-to-r from-emerald-700 to-teal-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
               <span>Common Nodes (Sol Janus, Sol Hecate, Demonic Wrath)</span>
-              <span className="text-xs font-normal text-sky-200">
+              <span className="text-xs font-normal text-emerald-100">
                 {commonNodes.filter((n) => n.currentLevel >= 30).length} / {commonNodes.length} Max
               </span>
             </div>
@@ -631,15 +660,15 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         </div>
 
         {/* Full-Width: HEXA Stat Nodes (I, II, III) */}
-        <div className="lg:col-span-2 bg-[#181d2a] border border-[#3b4463] rounded-2xl relative shadow-lg">
-          <div className="bg-gradient-to-r from-indigo-800 via-purple-800 to-fuchsia-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex flex-wrap items-center justify-between gap-2 rounded-t-2xl">
+        <div className="lg:col-span-2 bg-[#181d2a] border border-zinc-700/80 rounded-2xl relative shadow-lg">
+          <div className="bg-gradient-to-r from-zinc-950 via-neutral-900 to-zinc-900 border-b border-zinc-700/80 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex flex-wrap items-center justify-between gap-2 rounded-t-2xl">
             <div className="flex items-center gap-2 flex-wrap">
               <span>HEXA Stat Nodes (I, II, III)</span>
-              <span className="text-[11px] font-normal text-fuchsia-200 bg-fuchsia-950/70 border border-fuchsia-700/50 px-2 py-0.5 rounded">
+              <span className="text-[11px] font-normal text-zinc-300 bg-zinc-800/90 border border-zinc-600/60 px-2 py-0.5 rounded">
                 Tổng 3 Stat = 20 • Mở khóa lần lượt (I → II → III)
               </span>
             </div>
-            <span className="text-xs font-normal text-purple-200">
+            <span className="text-xs font-normal text-zinc-300">
               {hexaStats.filter((s) => getStatTotalLevel(s) >= 20).length} / {hexaStats.length} Complete
             </span>
           </div>
@@ -985,6 +1014,7 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                   const isIgnored = Boolean(ignoredStepsMap[idx])
                   const isNext = idx === currentTipIndex
                   const isTooltipOpen = activeStepTooltip?.idx === idx
+                  const frameClass = CATEGORY_THEMES[getStepCategory(step)]
 
                   const handleOpenStepTip = (
                     e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
@@ -1003,30 +1033,8 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                       onTouchStart={handleOpenStepTip}
                       onTouchEnd={() => setActiveStepTooltip(null)}
                       onTouchCancel={() => setActiveStepTooltip(null)}
-                      className={`relative flex items-center justify-center p-0.5 rounded-lg transition-transform cursor-pointer select-none ${
-                        isNext ? 'scale-105 z-20' : 'z-10 hover:scale-105 hover:z-20'
-                      }`}
+                      className={`relative mx-auto w-fit flex items-center justify-center p-[2.5px] rounded-[10px] transition-transform cursor-pointer select-none z-10 hover:scale-105 hover:z-20 ${frameClass}`}
                     >
-                      {/* Animated Marching Ants dashed border for next step to upgrade */}
-                      {isNext && (
-                        <div className="absolute -inset-[3px] rounded-lg pointer-events-none z-20 overflow-hidden">
-                          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                            <rect
-                              x="1.5"
-                              y="1.5"
-                              width="calc(100% - 3px)"
-                              height="calc(100% - 3px)"
-                              rx="8"
-                              fill="none"
-                              stroke="#fbbf24"
-                              strokeWidth="2.5"
-                              strokeDasharray="5 3"
-                              className="animate-marching-ants"
-                            />
-                          </svg>
-                        </div>
-                      )}
-
                       {/* Icon with target level in bottom right corner */}
                       <div
                         className={`relative rounded-lg overflow-hidden transition ${
@@ -1034,8 +1042,6 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                             ? 'opacity-25 grayscale'
                             : isCompleted
                             ? 'opacity-35 grayscale-[25%]'
-                            : isNext
-                            ? 'shadow-lg shadow-amber-400/40'
                             : 'hover:shadow-md'
                         }`}
                       >

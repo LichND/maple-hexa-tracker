@@ -431,11 +431,6 @@ export function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#1e2333] bg-[#0c101a] py-4 text-center text-xs text-slate-500">
-        <p>MapleStory HEXA Matrix Tracker • Lethe</p>
-      </footer>
-
       {/* Modals */}
       <SyncModal
         isOpen={isSyncModalOpen}
