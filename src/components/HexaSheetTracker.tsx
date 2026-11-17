@@ -649,7 +649,7 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
           {/* Common Nodes */}
           <div className="bg-[#181d2a] border border-emerald-900/60 rounded-2xl relative shadow-lg">
             <div className="bg-gradient-to-r from-emerald-700 to-teal-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
-              <span>Common Nodes (Sol Janus, Sol Hecate, Demonic Wrath)</span>
+              <span>Common Nodes</span>
               <span className="text-xs font-normal text-emerald-100">
                 {commonNodes.filter((n) => n.currentLevel >= 30).length} / {commonNodes.length} Max
               </span>
@@ -1029,7 +1029,7 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                       onTouchStart={handleOpenStepTip}
                       onTouchEnd={() => setActiveStepTooltip(null)}
                       onTouchCancel={() => setActiveStepTooltip(null)}
-                      className={`relative w-fit flex items-center justify-center p-[2.5px] rounded-[10px] transition-transform cursor-pointer select-none z-10 hover:scale-105 hover:z-20 ${frameClass}`}
+                      className={`relative w-fit flex items-center justify-center p-[2.5px] rounded-[10px] cursor-pointer select-none z-10 hover:brightness-110 ${frameClass}`}
                     >
                       {/* Icon with target level in bottom right corner */}
                       <div
@@ -1070,17 +1070,19 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                       {/* Floating tooltip portaled to document.body */}
                       {isTooltipOpen && activeStepTooltip && typeof document !== 'undefined' && (() => {
                         const targetCenterX = activeStepTooltip.rect.left + activeStepTooltip.rect.width / 2
-                        const tooltipLeft = Math.max(12, Math.min(window.innerWidth - 332, targetCenterX - 120))
-                        const arrowLeft = Math.max(12, Math.min(280, targetCenterX - tooltipLeft - 6))
+                        const tooltipW = 260
+                        const tooltipLeft = Math.max(12, Math.min(window.innerWidth - tooltipW - 12, targetCenterX - tooltipW / 2))
+                        const arrowLeft = Math.max(12, Math.min(tooltipW - 24, targetCenterX - tooltipLeft - 6))
                         return createPortal(
                           <div
                             style={{
                               position: 'fixed',
                               left: tooltipLeft,
                               bottom: window.innerHeight - activeStepTooltip.rect.top + 8,
+                              width: tooltipW,
                               zIndex: 9999
                             }}
-                            className="min-w-[210px] max-w-xs bg-slate-900/98 border border-amber-400/90 rounded-xl p-2.5 shadow-2xl backdrop-blur-md pointer-events-none animate-in fade-in zoom-in-95 duration-100"
+                            className="bg-slate-900/98 border border-amber-400/90 rounded-xl p-2.5 shadow-2xl backdrop-blur-md pointer-events-none"
                           >
                             <div className="flex items-center justify-between pb-1 border-b border-slate-800 text-[11px] font-bold text-amber-300">
                               <span>Bước #{idx + 1}</span>
@@ -1088,9 +1090,11 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                                 Mục tiêu: Lv {step.targetLevel}
                               </span>
                             </div>
-                            <p className="text-xs font-semibold text-slate-100 mt-1 truncate">
-                              {step.skillName}
-                            </p>
+                            <div className="text-xs font-semibold text-slate-100 mt-1 space-y-0.5 leading-snug">
+                              {step.skillName.split(' / ').map((part, pIdx) => (
+                                <div key={pIdx}>{part}</div>
+                              ))}
+                            </div>
                             <div className="mt-1.5 pt-1 border-t border-slate-800/80 text-[10px] flex items-center justify-between">
                               <span className="text-slate-400">Trạng thái:</span>
                               <span
