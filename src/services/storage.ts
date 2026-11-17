@@ -1,5 +1,6 @@
 import { AppState, Character, HexaSkillNode, HexaStatNode, DailyTracker } from '../types/hexa'
-import { COMMON_ICONS, ClassPreset } from '../data/commonSkills'
+import { COMMON_ICONS } from '../data/commonSkills'
+import type { ClassPreset } from '../types/classes'
 
 const STORAGE_KEY = 'maple_hexa_tracker_state_v4'
 

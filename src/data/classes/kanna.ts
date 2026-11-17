@@ -1,12 +1,10 @@
-import {
-  COMMON_ICONS,
+import type {
   ClassPreset,
   PriorityOrderStep,
   PriorityStep,
-  SkillMeta,
-  buildPrioritySteps,
-  getCommonNodesForBranch
-} from '../commonSkills'
+  SkillMeta
+} from '../../types/classes'
+import { COMMON_ICONS, buildPrioritySteps, getCommonNodesForBranch } from '../commonSkills'
 
 const KANNA_SKILL_META = {
   O: {

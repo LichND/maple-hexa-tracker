@@ -15,7 +15,7 @@ import {
   Lock
 } from 'lucide-react'
 import { Character, HexaSkillNode, HexaStatNode } from '../types/hexa'
-import { ClassPreset, PriorityStep } from '../data/commonSkills'
+import type { ClassPreset, PriorityStep } from '../types/classes'
 import { calculateCostBetweenLevels } from '../data/hexaCosts'
 import { createDefaultHexaStats } from '../services/storage'
 import { MultiSkillIcon } from './MultiSkillIcon'

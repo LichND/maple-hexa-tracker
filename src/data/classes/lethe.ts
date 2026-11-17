@@ -1,11 +1,10 @@
-import {
+import type {
   ClassPreset,
   PriorityOrderStep,
   PriorityStep,
-  SkillMeta,
-  buildPrioritySteps,
-  getCommonNodesForBranch
-} from '../commonSkills'
+  SkillMeta
+} from '../../types/classes'
+import { buildPrioritySteps, getCommonNodesForBranch } from '../commonSkills'
 
 const LETHE_SKILL_META = {
   "MAJ": {

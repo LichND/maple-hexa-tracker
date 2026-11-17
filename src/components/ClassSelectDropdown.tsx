@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search, Check } from 'lucide-react'
-import { ClassMeta } from '../data/commonSkills'
+import type { ClassMeta } from '../types/classes'
 
 interface ClassSelectDropdownProps {
   classes: ClassMeta[]

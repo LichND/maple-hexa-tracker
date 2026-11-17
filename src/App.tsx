@@ -10,7 +10,7 @@ import {
   hydrateCharacterWithPreset
 } from './services/storage'
 import { CLASS_LIST, getLoadedClassPreset, loadClassPreset } from './data/classesRegistry'
-import { ClassPreset } from './data/commonSkills'
+import type { ClassPreset } from './types/classes'
 import { AppState, Character } from './types/hexa'
 import {
   uploadBySyncCode,

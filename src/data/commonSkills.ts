@@ -1,4 +1,11 @@
-import { HexaSkillNode } from '../types/hexa'
+import type { HexaSkillNode } from '../types/hexa'
+import type {
+  BranchCommonSkill,
+  ClassBranch,
+  PriorityOrderStep,
+  PriorityStep,
+  SkillMeta
+} from '../types/classes'
 
 export const COMMON_ICONS = {
   hexaStat1: './icons/common/hexa_stat_1.png',
@@ -8,34 +15,6 @@ export const COMMON_ICONS = {
   solHecate: './icons/common/sol_hecate.png',
   unknownSkill: './icons/common/unknown_skill.png'
 } as const
-
-export const CLASS_IDS = ['lethe', 'kanna', 'lynn'] as const
-export type ClassId = (typeof CLASS_IDS)[number]
-
-export type ClassBranch =
-  | 'explorer_warrior'
-  | 'explorer_magician'
-  | 'explorer_bowman'
-  | 'explorer_thief'
-  | 'explorer_pirate'
-  | 'cygnus_knight'
-  | 'hero'
-  | 'resistance'
-  | 'demon'
-  | 'demonic'
-  | 'nova'
-  | 'transcendent'
-  | 'friends_world'
-  | 'flora'
-  | 'jianghu'
-  | 'sengoku'
-  | 'anima'
-
-export interface BranchCommonSkill {
-  id: string
-  name: string
-  icon: string
-}
 
 export const BRANCH_COMMON_SKILLS: Record<ClassBranch, BranchCommonSkill> = {
   explorer_warrior: {
@@ -155,14 +134,6 @@ export function getCommonNodesForBranch(
   ]
 }
 
-export interface SkillMeta {
-  skillName: string
-  shortName: string
-  icons: readonly string[]
-}
-
-export type PriorityOrderStep<K extends string> = readonly [K, number]
-
 export function buildPrioritySteps<K extends string>(
   metaMap: Record<K, SkillMeta>,
   order: readonly PriorityOrderStep<K>[]
@@ -176,35 +147,4 @@ export function buildPrioritySteps<K extends string>(
       icons: [...meta.icons]
     }
   })
-}
-
-export interface PriorityStep {
-  skillName: string
-  shortName: string
-  targetLevel: number
-  icons: string[]
-}
-
-export type HexaStatTriplet = [string, string, string]
-
-export interface ClassMeta {
-  id: ClassId
-  name: string
-  branch: ClassBranch
-}
-
-export interface ClassPreset extends ClassMeta {
-  welcomeMessage: string
-  hexaStatTypes?: HexaStatTriplet
-  priorities: {
-    id: string
-    name: string
-    steps: PriorityStep[]
-  }[]
-  nodes: {
-    skills: Omit<HexaSkillNode, 'currentLevel' | 'targetLevel'>[]
-    mastery: Omit<HexaSkillNode, 'currentLevel' | 'targetLevel'>[]
-    enhancement: Omit<HexaSkillNode, 'currentLevel' | 'targetLevel'>[]
-    common: Omit<HexaSkillNode, 'currentLevel' | 'targetLevel'>[]
-  }
 }

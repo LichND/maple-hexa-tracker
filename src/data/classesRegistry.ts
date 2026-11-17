@@ -1,4 +1,4 @@
-import { ClassId, ClassMeta, ClassPreset } from './commonSkills'
+import type { ClassId, ClassMeta, ClassPreset } from '../types/classes'
 
 export const CLASS_LIST: ClassMeta[] = [
   { id: 'lethe', name: 'Lethe', branch: 'demonic' },
