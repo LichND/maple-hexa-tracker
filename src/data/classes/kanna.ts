@@ -1,4 +1,12 @@
-import { COMMON_ICONS, ClassPreset, PriorityStep, getCommonNodesForBranch } from '../commonSkills'
+import {
+  COMMON_ICONS,
+  ClassPreset,
+  PriorityOrderStep,
+  PriorityStep,
+  SkillMeta,
+  buildPrioritySteps,
+  getCommonNodesForBranch
+} from '../commonSkills'
 
 const KANNA_SKILL_META = {
   O: {
@@ -94,11 +102,11 @@ const KANNA_SKILL_META = {
     shortName: 'HEXA Stat III',
     icons: [COMMON_ICONS.hexaStat3]
   }
-} as const
+} as const satisfies Record<string, SkillMeta>
 
 type KannaSkillKey = keyof typeof KANNA_SKILL_META
 
-const KANNA_ORDER_RAW: [KannaSkillKey, number][] = [
+const KANNA_ORDER_RAW: readonly PriorityOrderStep<KannaSkillKey>[] = [
   // Row 1 (Hexa Stat 1 after M2 lv9)
   ['M2', 1], ['M4', 1], ['M3', 1], ['M1', 1], ['M2', 2], ['HEC', 1], ['M2', 7],
   ['M4', 2], ['M2', 9], ['STAT1', 20], ['M3', 2], ['M4', 4], ['M3', 4], ['M4', 6], ['M3', 5],
@@ -131,15 +139,10 @@ const KANNA_ORDER_RAW: [KannaSkillKey, number][] = [
   ['SJ', 25], ['ASC', 30], ['SJ', 30]
 ]
 
-export const KANNA_PRIORITY_STEPS: PriorityStep[] = KANNA_ORDER_RAW.map(([key, targetLevel]) => {
-  const meta = KANNA_SKILL_META[key]
-  return {
-    skillName: meta.skillName,
-    shortName: meta.shortName,
-    targetLevel,
-    icons: [...meta.icons]
-  }
-})
+export const KANNA_PRIORITY_STEPS: PriorityStep[] = buildPrioritySteps(
+  KANNA_SKILL_META,
+  KANNA_ORDER_RAW
+)
 
 export const KANNA_CLASS: ClassPreset = {
   id: 'kanna',

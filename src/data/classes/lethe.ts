@@ -1,4 +1,11 @@
-import { ClassPreset, PriorityStep, getCommonNodesForBranch } from '../commonSkills'
+import {
+  ClassPreset,
+  PriorityOrderStep,
+  PriorityStep,
+  SkillMeta,
+  buildPrioritySteps,
+  getCommonNodesForBranch
+} from '../commonSkills'
 
 const LETHE_SKILL_META = {
   "MAJ": {
@@ -117,11 +124,11 @@ const LETHE_SKILL_META = {
       "./icons/common/sol_hecate.png"
     ]
   }
-} as const
+} as const satisfies Record<string, SkillMeta>
 
 type LetheSkillKey = keyof typeof LETHE_SKILL_META
 
-const LETHE_ORDER_RAW: [LetheSkillKey, number][] = [
+const LETHE_ORDER_RAW: readonly PriorityOrderStep<LetheSkillKey>[] = [
   ["MAJ", 1], ["DREAD", 4], ["B_CHAINS", 1], ["DREAD", 5], ["ASSIZE", 4], ["VARGR", 3],
   ["DREAD", 6], ["VARGR", 4], ["ASSIZE", 5], ["DREAD", 7], ["DEMONIC", 1], ["ASSIZE", 6],
   ["DREAD", 8], ["VARGR", 5], ["MAJ", 2], ["STAT1", 20], ["VO", 1], ["VARGR", 6],
@@ -152,15 +159,10 @@ const LETHE_ORDER_RAW: [LetheSkillKey, number][] = [
   ["DEMONIC", 16], ["B_PACK", 30], ["DEMONIC", 26], ["SOV", 30], ["DEMONIC", 30]
 ]
 
-export const LETHE_PRIORITY_STEPS: PriorityStep[] = LETHE_ORDER_RAW.map(([key, targetLevel]) => {
-  const meta = LETHE_SKILL_META[key]
-  return {
-    skillName: meta.skillName,
-    shortName: meta.shortName,
-    targetLevel,
-    icons: [...meta.icons]
-  }
-})
+export const LETHE_PRIORITY_STEPS: PriorityStep[] = buildPrioritySteps(
+  LETHE_SKILL_META,
+  LETHE_ORDER_RAW
+)
 
 export const LETHE_CLASS: ClassPreset = {
   id: 'lethe',

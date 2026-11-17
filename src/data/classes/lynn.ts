@@ -1,4 +1,12 @@
-import { COMMON_ICONS, ClassPreset, PriorityStep, getCommonNodesForBranch } from '../commonSkills'
+import {
+  COMMON_ICONS,
+  ClassPreset,
+  PriorityOrderStep,
+  PriorityStep,
+  SkillMeta,
+  buildPrioritySteps,
+  getCommonNodesForBranch
+} from '../commonSkills'
 
 const LYNN_SKILL_META = {
   O: {
@@ -80,11 +88,11 @@ const LYNN_SKILL_META = {
     shortName: 'HEXA Stat III',
     icons: [COMMON_ICONS.hexaStat3]
   }
-} as const
+} as const satisfies Record<string, SkillMeta>
 
 type LynnSkillKey = keyof typeof LYNN_SKILL_META
 
-const LYNN_ORDER_RAW: [LynnSkillKey, number][] = [
+const LYNN_ORDER_RAW: readonly PriorityOrderStep<LynnSkillKey>[] = [
   // Row 1
   ['ROS', 1], ['PECK', 7], ['HEC', 1], ['PECK', 9], ['M1', 1], ['M2', 1], ['B2', 1],
   ['M4', 1], ['M2', 4], ['M1', 3], ['M2', 7], ['M1', 5], ['ASC', 1],
@@ -108,15 +116,10 @@ const LYNN_ORDER_RAW: [LynnSkillKey, number][] = [
   ['ROS', 29], ['B4', 30], ['ROS', 30], ['M4', 30]
 ]
 
-export const LYNN_PRIORITY_STEPS: PriorityStep[] = LYNN_ORDER_RAW.map(([key, targetLevel]) => {
-  const meta = LYNN_SKILL_META[key]
-  return {
-    skillName: meta.skillName,
-    shortName: meta.shortName,
-    targetLevel,
-    icons: [...meta.icons]
-  }
-})
+export const LYNN_PRIORITY_STEPS: PriorityStep[] = buildPrioritySteps(
+  LYNN_SKILL_META,
+  LYNN_ORDER_RAW
+)
 
 export const LYNN_CLASS: ClassPreset = {
   id: 'lynn',

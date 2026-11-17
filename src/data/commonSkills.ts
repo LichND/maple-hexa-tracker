@@ -9,6 +9,9 @@ export const COMMON_ICONS = {
   unknownSkill: './icons/common/unknown_skill.png'
 } as const
 
+export const CLASS_IDS = ['lethe', 'kanna', 'lynn'] as const
+export type ClassId = (typeof CLASS_IDS)[number]
+
 export type ClassBranch =
   | 'explorer_warrior'
   | 'explorer_magician'
@@ -27,12 +30,14 @@ export type ClassBranch =
   | 'jianghu'
   | 'sengoku'
   | 'anima'
-  | string
 
-export const BRANCH_COMMON_SKILLS: Record<
-  string,
-  { id: string; name: string; icon: string }
-> = {
+export interface BranchCommonSkill {
+  id: string
+  name: string
+  icon: string
+}
+
+export const BRANCH_COMMON_SKILLS: Record<ClassBranch, BranchCommonSkill> = {
   explorer_warrior: {
     id: 'branch-explorer-warrior-common',
     name: 'HEXA Blitz Shield',
@@ -150,6 +155,29 @@ export function getCommonNodesForBranch(
   ]
 }
 
+export interface SkillMeta {
+  skillName: string
+  shortName: string
+  icons: readonly string[]
+}
+
+export type PriorityOrderStep<K extends string> = readonly [K, number]
+
+export function buildPrioritySteps<K extends string>(
+  metaMap: Record<K, SkillMeta>,
+  order: readonly PriorityOrderStep<K>[]
+): PriorityStep[] {
+  return order.map(([key, targetLevel]) => {
+    const meta = metaMap[key]
+    return {
+      skillName: meta.skillName,
+      shortName: meta.shortName,
+      targetLevel,
+      icons: [...meta.icons]
+    }
+  })
+}
+
 export interface PriorityStep {
   skillName: string
   shortName: string
@@ -157,15 +185,17 @@ export interface PriorityStep {
   icons: string[]
 }
 
+export type HexaStatTriplet = [string, string, string]
+
 export interface ClassMeta {
-  id: string
+  id: ClassId
   name: string
   branch: ClassBranch
 }
 
 export interface ClassPreset extends ClassMeta {
   welcomeMessage: string
-  hexaStatTypes?: [string, string, string]
+  hexaStatTypes?: HexaStatTriplet
   priorities: {
     id: string
     name: string

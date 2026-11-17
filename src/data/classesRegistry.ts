@@ -1,4 +1,4 @@
-import { ClassMeta, ClassPreset } from './commonSkills'
+import { ClassId, ClassMeta, ClassPreset } from './commonSkills'
 
 export const CLASS_LIST: ClassMeta[] = [
   { id: 'lethe', name: 'Lethe', branch: 'demonic' },
@@ -6,20 +6,29 @@ export const CLASS_LIST: ClassMeta[] = [
   { id: 'lynn', name: 'Lynn', branch: 'jianghu' }
 ]
 
-export const CLASS_META_MAP: Record<string, ClassMeta> = Object.fromEntries(
+export const CLASS_META_MAP = Object.fromEntries(
   CLASS_LIST.map((cls) => [cls.id, cls])
-)
+) as Record<ClassId, ClassMeta>
 
-const presetCache: Record<string, ClassPreset> = {}
+const presetCache: Partial<Record<ClassId, ClassPreset>> = {}
+
+export function isClassId(classId: string): classId is ClassId {
+  return classId in CLASS_META_MAP
+}
+
+export function normalizeClassId(classId?: string): ClassId {
+  return classId && isClassId(classId) ? classId : 'lethe'
+}
 
 export function getLoadedClassPreset(classId: string): ClassPreset | undefined {
-  return presetCache[classId]
+  return presetCache[normalizeClassId(classId)]
 }
 
 export async function loadClassPreset(classId: string): Promise<ClassPreset> {
-  const normalizedId = CLASS_META_MAP[classId] ? classId : 'lethe'
-  if (presetCache[normalizedId]) {
-    return presetCache[normalizedId]
+  const normalizedId = normalizeClassId(classId)
+  const cached = presetCache[normalizedId]
+  if (cached) {
+    return cached
   }
 
   let preset: ClassPreset
@@ -31,7 +40,6 @@ export async function loadClassPreset(classId: string): Promise<ClassPreset> {
       preset = (await import('./classes/lynn')).LYNN_CLASS
       break
     case 'lethe':
-    default:
       preset = (await import('./classes/lethe')).LETHE_CLASS
       break
   }
