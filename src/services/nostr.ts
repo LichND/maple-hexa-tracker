@@ -10,6 +10,7 @@ export const DEFAULT_NOSTR_RELAYS = [
 
 const NOSTR_APP_TAG = 'maple-hexa-tracker'
 const NOSTR_KIND_APP_DATA = 30078
+const NOSTR_KIND_DELETION = 5
 
 export const CLIENT_ID =
   typeof crypto !== 'undefined' && crypto.randomUUID
@@ -167,6 +168,65 @@ export async function uploadBySyncCode(
 
     if (successCount === 0) {
       throw new Error('Không thể kết nối tới Nostr Relay nào để lưu dữ liệu. Vui lòng thử lại.')
+    }
+
+    return { successCount, totalRelays: relays.length }
+  } finally {
+    pool.close(relays)
+  }
+}
+
+/**
+ * Publishes a NIP-09 deletion request (kind 5) to remove the user's NIP-78 data
+ * from Nostr Relays so public relays don't hold stale data.
+ */
+export async function deleteBySyncCode(
+  customRelays: string[] | undefined,
+  syncKey: string
+): Promise<{ successCount: number; totalRelays: number }> {
+  const relays = getActiveRelays(customRelays)
+  const { sk, pk } = await deriveNostrKeys(syncKey)
+  const pool = new SimplePool()
+
+  try {
+    let existingIds: string[] = []
+    try {
+      const existingEvents: Event[] = await withTimeout(
+        pool.querySync(relays, {
+          kinds: [NOSTR_KIND_APP_DATA],
+          authors: [pk],
+          '#d': [NOSTR_APP_TAG]
+        }),
+        4000,
+        'Query timeout'
+      )
+      existingIds = Array.from(new Set(existingEvents.map((ev) => ev.id)))
+    } catch {
+      // Proceed with addressable 'a' tag deletion even if query times out
+    }
+
+    const tags: string[][] = [
+      ['a', `${NOSTR_KIND_APP_DATA}:${pk}:${NOSTR_APP_TAG}`],
+      ['k', String(NOSTR_KIND_APP_DATA)],
+      ...existingIds.map((id) => ['e', id])
+    ]
+
+    const deletionTemplate = {
+      kind: NOSTR_KIND_DELETION,
+      created_at: Math.floor(Date.now() / 1000),
+      tags,
+      content: 'Deleted by user'
+    }
+
+    const signedEvent = finalizeEvent(deletionTemplate, sk)
+    const publishPromises = pool.publish(relays, signedEvent).map((p) =>
+      withTimeout(p, 6000, 'Relay timeout')
+    )
+    const results = await Promise.allSettled(publishPromises)
+    const successCount = results.filter((r) => r.status === 'fulfilled').length
+
+    if (successCount === 0) {
+      throw new Error('Không thể kết nối tới Nostr Relay nào để gửi yêu cầu xóa dữ liệu.')
     }
 
     return { successCount, totalRelays: relays.length }

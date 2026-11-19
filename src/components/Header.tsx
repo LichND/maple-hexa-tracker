@@ -120,12 +120,10 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onOpenSyncModal}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800 transition"
-          title={`Nostr Sync Code: ${syncState.syncCode || ''}`}
+          title="Đã kết nối Nostr Relay — Bấm để xem mã đồng bộ"
         >
           <Cloud className="w-3.5 h-3.5 text-emerald-400" />
-          <span>
-            {syncState.syncCode ? `Mã: ${syncState.syncCode}` : 'Đã đồng bộ'}
-          </span>
+          <span>Đã đồng bộ</span>
         </button>
         <button
           onClick={onManualSync}

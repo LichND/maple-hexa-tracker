@@ -10,14 +10,16 @@ import {
   AlertCircle,
   Radio,
   ShieldCheck,
-  RotateCcw
+  RotateCcw,
+  Trash2
 } from 'lucide-react'
 import { AppState } from '../types/hexa'
 import {
   DEFAULT_NOSTR_RELAYS,
   generateSyncCode,
   uploadBySyncCode,
-  downloadBySyncCode
+  downloadBySyncCode,
+  deleteBySyncCode
 } from '../services/nostr'
 import { exportStateAsJSON, importStateFromJSON } from '../services/storage'
 
@@ -37,6 +39,7 @@ export const SyncModal: React.FC<SyncModalProps> = ({
   const [activeTab, setActiveTab] = useState<'code' | 'relays' | 'backup'>('code')
   const [inputCode, setInputCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [confirmDeleteRelay, setConfirmDeleteRelay] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -124,6 +127,7 @@ export const SyncModal: React.FC<SyncModalProps> = ({
 
   // 3. Disconnect Sync Key
   const handleDisconnectSync = () => {
+    setConfirmDeleteRelay(false)
     onUpdateAppState((prev) => ({
       ...prev,
       sync: {
@@ -135,6 +139,36 @@ export const SyncModal: React.FC<SyncModalProps> = ({
       }
     }))
     setMessage({ type: 'success', text: 'Đã ngắt kết nối đồng bộ Nostr trên thiết bị này.' })
+  }
+
+  // 3b. Delete data on Nostr Relays (NIP-09) & disconnect
+  const handleDeleteRelayData = async () => {
+    const code = appState.sync.syncCode
+    if (!code) return
+    setIsLoading(true)
+    setMessage(null)
+    try {
+      const res = await deleteBySyncCode(appState.customNostrRelays, code)
+      setConfirmDeleteRelay(false)
+      onUpdateAppState((prev) => ({
+        ...prev,
+        sync: {
+          ...prev.sync,
+          enabled: false,
+          syncCode: null,
+          status: 'idle',
+          error: undefined
+        }
+      }))
+      setMessage({
+        type: 'success',
+        text: `Đã gửi yêu cầu xóa dữ liệu (NIP-09) tới ${res.successCount}/${res.totalRelays} Nostr Relays và ngắt kết nối (dữ liệu trên máy vẫn được giữ nguyên).`
+      })
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e.message || 'Lỗi khi xóa dữ liệu trên Nostr Relays' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // 4. Save Custom Nostr Relays
@@ -336,10 +370,43 @@ export const SyncModal: React.FC<SyncModalProps> = ({
                     <button
                       onClick={handleDisconnectSync}
                       disabled={isLoading}
-                      className="px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/80 text-red-300 border border-red-800/60 transition"
+                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
                     >
                       Ngắt kết nối
                     </button>
+                    {!confirmDeleteRelay ? (
+                      <button
+                        onClick={() => setConfirmDeleteRelay(true)}
+                        disabled={isLoading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/80 text-red-300 border border-red-800/60 transition"
+                        title="Gửi yêu cầu xóa dữ liệu (NIP-09) khỏi Nostr Relays công cộng"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Xóa data trên Relay</span>
+                      </button>
+                    ) : (
+                      <div className="w-full mt-2 p-2.5 rounded-lg bg-red-950/50 border border-red-800/70 flex flex-wrap items-center justify-between gap-2 text-left">
+                        <span className="text-[11px] text-red-200">
+                          Xóa bản lưu trên Nostr Relays? (Dữ liệu trên máy vẫn giữ nguyên)
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setConfirmDeleteRelay(false)}
+                            disabled={isLoading}
+                            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] transition"
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            onClick={handleDeleteRelayData}
+                            disabled={isLoading}
+                            className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-500 text-white font-semibold text-[11px] transition"
+                          >
+                            {isLoading ? 'Đang xóa...' : 'Xác nhận xóa'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
