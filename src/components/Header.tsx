@@ -286,6 +286,8 @@ export const Header: React.FC<HeaderProps> = ({
                   {characters.map((char) => {
                     const isActive = char.id === activeCharacter?.id
                     const isEditingThis = editingId === char.id
+                    const charClassName =
+                      CLASS_META_MAP[normalizeClassId(char.classId)].name || char.job || 'Lethe'
 
                     if (isEditingThis) {
                       return (
@@ -341,6 +343,9 @@ export const Header: React.FC<HeaderProps> = ({
                             }`}
                           />
                           <span className="font-bold text-xs truncate">{char.name}</span>
+                          <span className="text-[11px] font-medium text-slate-400 shrink-0">
+                            ({charClassName})
+                          </span>
                           {isActive && (
                             <span className="text-[9px] font-bold text-emerald-300 bg-emerald-950 px-1.5 py-0.2 rounded border border-emerald-800 shrink-0">
                               Đang chọn

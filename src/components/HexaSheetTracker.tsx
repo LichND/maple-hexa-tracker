@@ -320,7 +320,10 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
   }
 
   // Render a skill node box
-  const renderNodeItem = (node: HexaSkillNode) => {
+  const renderNodeItem = (
+    node: HexaSkillNode,
+    offset?: { leftSteps: number; rightSteps: number }
+  ) => {
     const isComplete = node.currentLevel >= 30
     const isCombo = Boolean(node.multiIcons && node.multiIcons.length > 1)
     const isSkill3 = isThirdSkillNode(node)
@@ -344,7 +347,19 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         onTouchStart={handleOpenNodeTip}
         onTouchEnd={() => isNext && setActiveNodeTooltip(null)}
         onTouchCancel={() => isNext && setActiveNodeTooltip(null)}
-        className={`rounded-xl p-3 flex items-center justify-between gap-3 transition relative group ${
+        style={
+          offset
+            ? ({
+                '--ls': offset.leftSteps,
+                '--rs': offset.rightSteps
+              } as React.CSSProperties)
+            : undefined
+        }
+        className={`rounded-xl p-1.5 sm:p-3 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-3 transition relative group ${
+          offset
+            ? 'ml-[calc(var(--ls)*8px)] mr-[calc(var(--rs)*8px)] sm:ml-[calc(var(--ls)*14px)] sm:mr-[calc(var(--rs)*14px)]'
+            : ''
+        } ${
           isNext
             ? 'bg-[#291e38] border-2 border-amber-400/90 shadow-lg shadow-amber-500/20 z-20'
             : isIgnored
@@ -412,19 +427,24 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         })()}
 
         {/* Left: MultiSkillIcon & Name */}
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <MultiSkillIcon
-            icons={node.multiIcons || (node.customIcon ? [node.customIcon] : [])}
-            subSkills={node.subSkills}
-            size={44}
-            currentLevel={node.currentLevel}
-          />
+        <div
+          className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0 sm:shrink sm:flex-1"
+          title={node.name}
+        >
+          <div className="shrink-0 scale-[0.82] sm:scale-100 origin-center -my-1 sm:my-0">
+            <MultiSkillIcon
+              icons={node.multiIcons || (node.customIcon ? [node.customIcon] : [])}
+              subSkills={node.subSkills}
+              size={44}
+              currentLevel={node.currentLevel}
+            />
+          </div>
 
           {/* Name & Combo / Next badge */}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 hidden sm:block">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span
-                className={`text-xs sm:text-sm font-semibold block truncate ${
+                className={`text-xs sm:text-sm font-semibold block truncate max-w-full ${
                   isIgnored ? 'text-slate-400 line-through' : 'text-slate-100'
                 }`}
                 title={node.name}
@@ -432,24 +452,24 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                 {node.name}
               </span>
               {isCombo && (
-                <span className="text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700/80 px-1.5 py-0.2 rounded shrink-0">
+                <span className="hidden lg:inline-block text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700/80 px-1.5 py-0.2 rounded shrink-0">
                   x{node.multiIcons?.length || 2} Split
                 </span>
               )}
               {isNext && (
-                <span className="text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/80 px-1.5 py-0.2 rounded-full animate-pulse shrink-0">
+                <span className="hidden lg:inline-block text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/80 px-1.5 py-0.2 rounded-full animate-pulse shrink-0">
                   ★ Cần Nâng Tiếp
                 </span>
               )}
               {isIgnored && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950/90 text-rose-300 border border-rose-700/80 shrink-0">
+                <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950/90 text-rose-300 border border-rose-700/80 shrink-0">
                   <EyeOff className="w-3 h-3" />
                   <span>Ignored</span>
                 </span>
               )}
             </div>
             {isComplete && (
-              <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-0.5">
+              <span className="hidden lg:flex text-[11px] font-bold text-emerald-400 items-center gap-1 mt-0.5">
                 <Check className="w-3 h-3 stroke-[3]" /> Node Complete!
               </span>
             )}
@@ -457,14 +477,14 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
         </div>
 
         {/* Right: Level with QoL increment buttons */}
-        <div className="flex items-center gap-1 bg-[#151a27] border border-[#374151] rounded-lg p-1 shrink-0 relative z-10">
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-[#151a27] border border-[#374151] rounded-lg p-0.5 sm:p-1 shrink-0 relative z-10">
           <button
             onClick={() => updateNodeLevel(node.id, -1)}
             disabled={node.currentLevel <= 0}
-            className="w-7 h-7 rounded bg-[#2b334a] hover:bg-[#384361] disabled:opacity-30 text-slate-200 font-bold flex items-center justify-center transition active:scale-95"
+            className="w-5 h-5 sm:w-7 sm:h-7 rounded bg-[#2b334a] hover:bg-[#384361] disabled:opacity-30 text-slate-200 font-bold flex items-center justify-center transition active:scale-95"
             title="Giảm 1 level"
           >
-            <Minus className="w-3.5 h-3.5" />
+            <Minus className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
           </button>
 
           <input
@@ -476,7 +496,7 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
               const val = Math.max(0, Math.min(30, parseInt(e.target.value) || 0))
               setNodeLevelDirect(node.id, val)
             }}
-            className={`w-10 text-center bg-transparent font-mono font-bold text-base outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+            className={`w-6 sm:w-10 text-center bg-transparent font-mono font-bold text-xs sm:text-base outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
               isComplete ? 'text-emerald-400' : isNext ? 'text-amber-300' : 'text-slate-100'
             }`}
           />
@@ -484,16 +504,16 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
           <button
             onClick={() => updateNodeLevel(node.id, 1)}
             disabled={node.currentLevel >= 30}
-            className="w-7 h-7 rounded bg-[#2b334a] hover:bg-[#384361] disabled:opacity-30 text-slate-200 font-bold flex items-center justify-center transition active:scale-95"
+            className="w-5 h-5 sm:w-7 sm:h-7 rounded bg-[#2b334a] hover:bg-[#384361] disabled:opacity-30 text-slate-200 font-bold flex items-center justify-center transition active:scale-95"
             title="Tăng 1 level"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
           </button>
 
           {node.currentLevel < 30 && (
             <button
               onClick={() => setNodeLevelDirect(node.id, 30)}
-              className="text-[10px] font-bold px-1.5 py-1 rounded bg-[#3b4463] hover:bg-sky-600 text-slate-200 hover:text-white transition ml-0.5"
+              className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 sm:py-1 rounded bg-[#3b4463] hover:bg-sky-600 text-slate-200 hover:text-white transition ml-0.5"
               title="Đặt max level (30)"
             >
               Max
@@ -575,14 +595,14 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
       </div>
 
       {/* 2. NODE CATEGORIES MATRIX */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-5">
         {/* Left: Skill Nodes & Enhancement Nodes */}
-        <div className="space-y-5">
+        <div className="space-y-3 sm:space-y-5">
           {/* Skill Nodes */}
           <div className="bg-[#181d2a] border border-orange-900/60 rounded-2xl relative shadow-lg">
-            <div className="bg-gradient-to-r from-orange-700 to-amber-700 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between gap-2 rounded-t-2xl">
+            <div className="bg-gradient-to-r from-orange-700 to-amber-700 px-2.5 sm:px-4 py-2 sm:py-2.5 font-bold text-slate-100 text-xs sm:text-sm tracking-wide shadow flex flex-wrap items-center justify-between gap-1.5 rounded-t-2xl">
               <span>Skill Nodes</span>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 {thirdSkillNode && (
                   <button
                     type="button"
@@ -599,69 +619,81 @@ export const HexaSheetTracker: React.FC<HexaSheetTrackerProps> = ({
                     ) : (
                       <Eye className="w-3 h-3 text-orange-200" />
                     )}
-                    <span>Ignore Skill 3</span>
+                    <span className="hidden sm:inline">Ignore Skill 3</span>
                   </button>
                 )}
-                <span className="text-xs font-normal text-orange-100">
+                <span className="text-[11px] sm:text-xs font-normal text-orange-100">
                   {skillNodes.filter((n) => n.currentLevel >= 30).length} / {skillNodes.length} Max
                 </span>
               </div>
             </div>
-            <div className="p-3.5 space-y-2.5">
-              {skillNodes.map((n) => renderNodeItem(n))}
+            <div className="p-1.5 sm:p-3.5 space-y-1.5 sm:space-y-2.5">
+              {[...skillNodes].reverse().map((n, idx, arr) => {
+                const max = arr.length - 1
+                return renderNodeItem(n, { leftSteps: idx, rightSteps: max - idx })
+              })}
             </div>
           </div>
 
           {/* Enhancement Nodes (5th Job Boosts) */}
           <div className="bg-[#181d2a] border border-sky-900/60 rounded-2xl relative shadow-lg">
-            <div className="bg-gradient-to-r from-sky-700 to-blue-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
-              <span>Enhancement Nodes (5th Job Boosts)</span>
-              <span className="text-xs font-normal text-sky-100">
+            <div className="bg-gradient-to-r from-sky-700 to-blue-800 px-2.5 sm:px-4 py-2 sm:py-2.5 font-bold text-slate-100 text-xs sm:text-sm tracking-wide shadow flex flex-wrap items-center justify-between gap-1.5 rounded-t-2xl">
+              <span>Enhancement Nodes <span className="hidden sm:inline">(5th Job Boosts)</span></span>
+              <span className="text-[11px] sm:text-xs font-normal text-sky-100">
                 {enhancementNodes.filter((n) => n.currentLevel >= 30).length} / {enhancementNodes.length} Max
               </span>
             </div>
-            <div className="p-3.5 space-y-2.5">
-              {enhancementNodes.map((n) => renderNodeItem(n))}
+            <div className="p-1.5 sm:p-3.5 space-y-1.5 sm:space-y-2.5">
+              {enhancementNodes.map((n, idx, arr) => {
+                const max = arr.length - 1
+                return renderNodeItem(n, { leftSteps: max - idx, rightSteps: idx })
+              })}
             </div>
           </div>
         </div>
 
         {/* Right: Mastery Nodes & Common Nodes */}
-        <div className="space-y-5">
+        <div className="space-y-3 sm:space-y-5">
           {/* Mastery Nodes */}
           <div className="bg-[#181d2a] border border-violet-900/60 rounded-2xl relative shadow-lg">
-            <div className="bg-gradient-to-r from-violet-700 to-purple-700 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
+            <div className="bg-gradient-to-r from-violet-700 to-purple-700 px-2.5 sm:px-4 py-2 sm:py-2.5 font-bold text-slate-100 text-xs sm:text-sm tracking-wide shadow flex flex-wrap items-center justify-between gap-1.5 rounded-t-2xl">
               <div className="flex items-center gap-2">
                 <span>Mastery Nodes</span>
-                <span className="text-[11px] font-normal text-violet-200 bg-violet-900/60 px-2 py-0.5 rounded">
+                <span className="hidden sm:inline text-[11px] font-normal text-violet-200 bg-violet-900/60 px-2 py-0.5 rounded">
                   Ghép chéo 2 skill
                 </span>
               </div>
-              <span className="text-xs font-normal text-violet-200">
+              <span className="text-[11px] sm:text-xs font-normal text-violet-200">
                 {masteryNodes.filter((n) => n.currentLevel >= 30).length} / {masteryNodes.length} Max
               </span>
             </div>
-            <div className="p-3.5 space-y-2.5">
-              {masteryNodes.map((n) => renderNodeItem(n))}
+            <div className="p-1.5 sm:p-3.5 space-y-1.5 sm:space-y-2.5">
+              {[...masteryNodes].reverse().map((n, idx, arr) => {
+                const max = arr.length - 1
+                return renderNodeItem(n, { leftSteps: max - idx, rightSteps: idx })
+              })}
             </div>
           </div>
 
           {/* Common Nodes */}
           <div className="bg-[#181d2a] border border-emerald-900/60 rounded-2xl relative shadow-lg">
-            <div className="bg-gradient-to-r from-emerald-700 to-teal-800 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex items-center justify-between rounded-t-2xl">
+            <div className="bg-gradient-to-r from-emerald-700 to-teal-800 px-2.5 sm:px-4 py-2 sm:py-2.5 font-bold text-slate-100 text-xs sm:text-sm tracking-wide shadow flex flex-wrap items-center justify-between gap-1.5 rounded-t-2xl">
               <span>Common Nodes</span>
-              <span className="text-xs font-normal text-emerald-100">
+              <span className="text-[11px] sm:text-xs font-normal text-emerald-100">
                 {commonNodes.filter((n) => n.currentLevel >= 30).length} / {commonNodes.length} Max
               </span>
             </div>
-            <div className="p-3.5 space-y-2.5">
-              {commonNodes.map((n) => renderNodeItem(n))}
+            <div className="p-1.5 sm:p-3.5 space-y-1.5 sm:space-y-2.5">
+              {commonNodes.map((n, idx, arr) => {
+                const max = arr.length - 1
+                return renderNodeItem(n, { leftSteps: idx, rightSteps: max - idx })
+              })}
             </div>
           </div>
         </div>
 
         {/* Full-Width: HEXA Stat Nodes (I, II, III) */}
-        <div className="lg:col-span-2 bg-[#181d2a] border border-zinc-700/80 rounded-2xl relative shadow-lg">
+        <div className="col-span-2 bg-[#181d2a] border border-zinc-700/80 rounded-2xl relative shadow-lg">
           <div className="bg-gradient-to-r from-zinc-950 via-neutral-900 to-zinc-900 border-b border-zinc-700/80 px-4 py-2.5 font-bold text-slate-100 text-sm tracking-wide shadow flex flex-wrap items-center justify-between gap-2 rounded-t-2xl">
             <div className="flex items-center gap-2 flex-wrap">
               <span>HEXA Stat Nodes (I, II, III)</span>
